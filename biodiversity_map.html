@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Species Biodiversity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+    <link
+      href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      h2,
+      h3 {
+        margin: 10px;
+        font-size: 18px;
+      }
+      h3 {
+        font-size: 16px;
+      }
+      p {
+        margin: 10px;
+        font-size: 16px;
+      }
+      .map-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #fff;
+        margin-right: 20px;
+        font-family: Arial, sans-serif;
+        overflow: auto;
+        border-radius: 3px;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+      #features {
+        top: 0;
+        left: 0;
+        height: 500px;
+        margin-top: 20px;
+        margin-left: 20px;
+        width: 270px;
+      }
+      #legend {
+        padding: 10px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        line-height: 18px;
+        height: 90px;
+        margin-bottom: 40px;
+        width: 115px;
+      }
+      .legend-key {
+        display: inline-block;
+        border-radius: 20%;
+        width: 10px;
+        height: 10px;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="map-overlay" id="features">
+      <h2>Status of Species Biodiversity in the US</h2>
+      <p>This map serves as 20-year update and extension to a <a href="https://www.natureserve.org/sites/default/files/publications/files/stateofunions.pdf">report</a> 
+        prepared by <a href="https://www.natureserve.org/">NatureServe</a> for <a href="https://www.nature.org/en-us/">The Nature Conservancy</a>. 
+        Using the same study parameters as the original, this map compiles updated biodiversity statistics 
+        on native vascular plant, vertebrate, and a broad selection of invertebrate species, incorporating 
+        nearly 2,000 more species. Data: NatureServe, 2022.</p>
+      <div id="pd"><p>Hover over a state to populate biodiversity statistics.</p></div>
+    </div>
+    <div class="map-overlay" id="legend"></div>
+
+    <script>
+      // define access token
+      mapboxgl.accessToken = 'pk.eyJ1IjoiZGNhbGxhaGFuIiwiYSI6ImNsMXdnbHBrMDJ3Z2czY3Bjbmo1aTNyNzAifQ.ZVkx-95gtU6BLDu34HcCYw';
+
+      // create map
+      const map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/dcallahan/cl9m0q8vg000115mrrmqkt66v',
+        zoom: 3.4,
+        center: [-102.917, 37.856],
+        projection: {
+          name: 'albers',
+          center: [-96, 37.5],
+          parallels: [29.5, 45.5]
+        }
+      });
+
+      // load map
+      map.on('load', () => {
+
+        // make a pointer cursor
+        map.getCanvas().style.cursor = 'default';
+       
+        // define layer names
+        const layers = [
+          '1,659 - 3,000',
+          '3,000 - 4,000',
+          '4,000 - 5,000',
+          '5,000 - 6,000',
+          '6,000 - 7,091'
+        ];
+        const colors = [
+          '#ebe64c',
+          '#9ac874',
+          '#77a682',
+          '#5b7c8b',
+          '#424a80',
+          '#2f0863'
+        ];
+
+        // create legend
+        const legend = document.getElementById('legend');
+
+        layers.forEach((layer, i) => {
+          const color = colors[i];
+          const item = document.createElement('div');
+          const key = document.createElement('span');
+          key.className = 'legend-key';
+          key.style.backgroundColor = color;
+
+          const value = document.createElement('span');
+          value.innerHTML = `${layer}`;
+          item.appendChild(key);
+          item.appendChild(value);
+          legend.appendChild(item);
+        });
+
+        // configure information window on hover
+        map.on('mousemove', (event) => {
+          const states = map.queryRenderedFeatures(event.point, {
+            layers: ['choropleth-fill']
+          });
+          document.getElementById('pd').innerHTML = states.length
+            ? `<h3>${states[0].properties.NAME}</h3>
+            <p><strong><em>${states[0].properties.spcs_ct}</strong> native species (ranked ${states[0].properties.spcs_rn}/51)</em></p>
+            <p><strong><em>${states[0].properties.endmc_c}</strong> endemic species (ranked ${states[0].properties.endmc_r}/51)</em></p>
+            <p><strong><em>${states[0].properties.extnct_c}</strong> presumed or possibly extinct species (ranked ${states[0].properties.extnct_r}/51)</em></p>
+            <p><strong><em>${states[0].properties.rsk_pct}</strong>% species at risk (ranked ${states[0].properties.rsk_rnk}/51)</em></p>`
+            : `<p>Hover over a state to populate biodiversity statistics.</p>`;
+        });
+      });
+    </script>
+  </body>
+</html>
